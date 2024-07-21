@@ -40,14 +40,21 @@ def preprocess_data(df):
 data = preprocess_data(data)
 
 # Define features and target variable
-X = data.drop(["age"], axis=1)  # Example: removing 'age' from features
-y = data["age"]  # Example: using 'age' as target variable
+X = data.drop(["age", "age_category"], axis=1)  # Features
+y = data["age_category"]  # Target variable
 
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train a Random Forest Classifier
 model = RandomForestClassifier(random_state=42)
+
+# Debugging: Print shapes and sample data
+print("Shape of X_train:", X_train.shape)
+print("Shape of y_train:", y_train.shape)
+print("First few rows of X_train:\n", X_train.head())
+print("First few rows of y_train:\n", y_train.head())
+
 model.fit(X_train, y_train)
 
 # Predict on the test set
