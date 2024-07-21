@@ -43,25 +43,32 @@ data = preprocess_data(data)
 X = data.drop(["age"], axis=1)  # Features
 y = data["age"]  # Target variable
 
+# Debugging output
+st.write("Unique values in target variable (y):", y.unique())
+st.write("Data type of target variable (y):", y.dtype)
+
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Train a Random Forest Classifier
 model = RandomForestClassifier(random_state=42)
-model.fit(X_train, y_train)
+try:
+    model.fit(X_train, y_train)
+    # Predict on the test set
+    y_pred = model.predict(X_test)
 
-# Predict on the test set
-y_pred = model.predict(X_test)
+    # Show model performance
+    st.title('Model Training and Performance')
+    st.subheader('Classification Report')
+    report = classification_report(y_test, y_pred, output_dict=True)
+    st.json(report)
 
-# Show model performance
-st.title('Model Training and Performance')
-st.subheader('Classification Report')
-report = classification_report(y_test, y_pred, output_dict=True)
-st.json(report)
+    st.subheader('Model Accuracy')
+    accuracy = accuracy_score(y_test, y_pred)
+    st.write(f'Accuracy: {accuracy:.2f}')
 
-st.subheader('Model Accuracy')
-accuracy = accuracy_score(y_test, y_pred)
-st.write(f'Accuracy: {accuracy:.2f}')
+except ValueError as e:
+    st.error(f"An error occurred: {e}")
 
 # Plotting
 st.subheader('Histograms and Boxplots')
