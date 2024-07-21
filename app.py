@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import classification_report, accuracy_score
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.metrics import mean_squared_error, r2_score
 
 # Load data
 @st.cache
@@ -50,8 +50,8 @@ st.write("Data type of target variable (y):", y.dtype)
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Train a Random Forest Classifier
-model = RandomForestClassifier(random_state=42)
+# Train a Random Forest Regressor
+model = RandomForestRegressor(random_state=42)
 try:
     model.fit(X_train, y_train)
     # Predict on the test set
@@ -59,13 +59,11 @@ try:
 
     # Show model performance
     st.title('Model Training and Performance')
-    st.subheader('Classification Report')
-    report = classification_report(y_test, y_pred, output_dict=True)
-    st.json(report)
-
-    st.subheader('Model Accuracy')
-    accuracy = accuracy_score(y_test, y_pred)
-    st.write(f'Accuracy: {accuracy:.2f}')
+    st.subheader('Regression Metrics')
+    mse = mean_squared_error(y_test, y_pred)
+    r2 = r2_score(y_test, y_pred)
+    st.write(f'Mean Squared Error: {mse:.2f}')
+    st.write(f'R^2 Score: {r2:.2f}')
 
 except ValueError as e:
     st.error(f"An error occurred: {e}")
