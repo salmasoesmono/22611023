@@ -3,20 +3,26 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.model_selection import train_test_split, KFold, GridSearchCV
-from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
-from sklearn.svm import SVC
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
+from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # Load and preprocess data
-data = pd.read_csv(r'D:\SEMESTER 4\MPML\UAS\onlinefoods.csv')
+data = pd.read_csv(r'D:\SEMESTER 4\MPML\UAS\insurance.csv')
+
+# Discretize 'age' into categories
+bins = [0, 20, 30, 40, 50, 60, 70, 80, np.inf]
+labels = ['<20', '20-30', '30-40', '40-50', '50-60', '60-70', '70-80', '80+']
+data['age_category'] = pd.cut(data['age'], bins=bins, labels=labels, right=False)
 
 # Define features and target variable
-X = data.drop("Feedback", axis=1)  # Features
-y = data["Feedback"]  # Target variable
+X = data.drop(["age", "age_category"], axis=1)  # Features
+y = data["age_category"]  # Target variable
 
 # Encode categorical variables
-categorical_columns = ['Gender', 'Marital Status', 'Occupation', 'Educational Qualifications', 'Output2']
+categorical_columns = ['sex', 'smoker', 'region']
 label_encoders = {}
 
 for column in categorical_columns:
@@ -25,16 +31,9 @@ for column in categorical_columns:
         X[column] = le.fit_transform(X[column].astype(str))
         label_encoders[column] = le
 
-# Convert 'Monthly Income' and 'Output' using OrdinalEncoder for more flexible handling
-ordinal_columns = ['Monthly Income', 'Output']
-ordinal_encoder = OrdinalEncoder()
-
-X[ordinal_columns] = ordinal_encoder.fit_transform(X[ordinal_columns].astype(str))
-
-# Encode target variable if it's not already numerical
-if y.dtype == 'object':
-    le_feedback = LabelEncoder()
-    y = le_feedback.fit_transform(y)
+# Normalize numerical features
+scaler = StandardScaler()
+X[['children', 'charges']] = scaler.fit_transform(X[['children', 'charges']])
 
 # Check the data types and unique values to ensure all data is numeric
 print("Data types of features:\n", X.dtypes)
@@ -43,11 +42,11 @@ print("Unique values in each feature:\n", X.nunique())
 # Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Define models and hyperparameter grids
+# Define models and hyperparameter grids for classification
 models = {
     "Random Forest": RandomForestClassifier(random_state=42),
-    "Gradient Boosting": GradientBoostingClassifier(random_state=42),
-    "SVM": SVC(kernel="rbf", random_state=42),
+    "KNN": KNeighborsClassifier(),
+    "Decision Tree": DecisionTreeClassifier(random_state=42)
 }
 
 param_grids = {
@@ -55,8 +54,15 @@ param_grids = {
         "n_estimators": [100, 200, 300],
         "max_depth": [5, 10, 15],
     },
-    "Gradient Boosting": {"learning_rate": [0.1, 0.05, 0.01], "n_estimators": [100, 200, 300]},
-    "SVM": {"C": [0.1, 1, 10], "gamma": [0.01, 0.1, 1]},
+    "KNN": {
+        "n_neighbors": [3, 5, 7, 9],
+        "weights": ['uniform', 'distance'],
+        "p": [1, 2]  # 1 untuk Manhattan, 2 untuk Euclidean
+    },
+    "Decision Tree": {
+        "max_depth": [5, 10, 15],
+        "min_samples_split": [2, 5, 10]
+    }
 }
 
 # K-Fold Cross-Validation for Robust Evaluation
@@ -68,18 +74,24 @@ for model_name, model in models.items():
     cv_results = []
     
     # Hyperparameter tuning with GridSearchCV
-    grid_search = GridSearchCV(model, param_grids[model_name], scoring='accuracy', cv=kfold)
-    grid_search.fit(X_train, y_train)
-    best_model = grid_search.best_estimator_
-    best_params = grid_search.best_params_
-    best_score = grid_search.best_score_
-    
-    print(f"Best Parameters for {model_name}: {best_params}")
-    print(f"Best Score for {model_name}: {best_score:.4f}")
+    if model_name in param_grids:
+        grid_search = GridSearchCV(model, param_grids[model_name], scoring='accuracy', cv=kfold)
+        grid_search.fit(X_train, y_train)
+        best_model = grid_search.best_estimator_
+        best_params = grid_search.best_params_
+        best_score = grid_search.best_score_
+        
+        print(f"Best Parameters for {model_name}: {best_params}")
+        print(f"Best Score for {model_name}: {best_score:.4f}")
+
+    else:
+        best_model = model
+        best_params = {}
+        best_score = np.nan  # No grid search for models without hyperparameters
 
     for train_index, val_index in kfold.split(X_train):
         X_train_fold, X_val_fold = X_train.iloc[train_index], X_train.iloc[val_index]
-        y_train_fold, y_val_fold = y_train[train_index], y_train[val_index]
+        y_train_fold, y_val_fold = y_train.iloc[train_index], y_train.iloc[val_index]
 
         best_model.fit(X_train_fold, y_train_fold)  # Train the best model
 
