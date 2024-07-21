@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import exploration
 import preprocessing
-import train_and_evaluate
+import model_training
 
 st.title("Insurance Data Analysis and Model Training")
 

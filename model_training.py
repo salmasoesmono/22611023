@@ -10,7 +10,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 # Load and preprocess data
-data = pd.read_csv('https://raw.githubusercontent.com/salmasoesmono/22611023/main/insurance.csv'')
+data = pd.read_csv(r'D:\SEMESTER 4\MPML\UAS\insurance.csv')
 
 # Discretize 'age' into categories
 bins = [0, 20, 30, 40, 50, 60, 70, 80, np.inf]

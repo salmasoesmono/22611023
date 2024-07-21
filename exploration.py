@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 # Muat dataset (pastikan path file Anda disesuaikan)
-data = pd.read_csv('https://raw.githubusercontent.com/salmasoesmono/22611023/main/insurance.csv')
+data = pd.read_csv(r'D:\SEMESTER 4\MPML\UAS\insurance.csv')
 
 # Inspeksi Data
 print(data.head())
